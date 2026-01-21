@@ -1,57 +1,37 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import Card from "../components/Card";
 import PageHeader from "../components/PageHeader";
-import { apiPost } from "../api/client";
-import { saveAuth } from "../utils/auth";
+import { setRole } from "../api/client";
 
 export default function StaffLogin() {
-  const nav = useNavigate();
-  const [form, setForm] = useState({ email: "staff@cst.com", password: "staff123" });
+  const [key, setKey] = useState("");
   const [err, setErr] = useState("");
+  const nav = useNavigate();
 
-  async function onSubmit(e) {
+  function onLogin(e) {
     e.preventDefault();
     setErr("");
 
-    try {
-      const res = await apiPost("/auth/staff/login", form);
-      saveAuth(res.access_token, "staff");
-      nav("/staff/requests");
-    } catch {
-      setErr("Staff login failed (demo: staff@cst.com / staff123)");
+    // Simple demo key (optional)
+    if (key && key !== "admin123") {
+      setErr("Invalid staff key. Try: admin123");
+      return;
     }
+
+    setRole("staff");
+    nav("/staff/dashboard");
   }
 
   return (
-    <div className="card card-pad">
-      <PageHeader title="Staff Login" subtitle="Access staff console" />
-      <form onSubmit={onSubmit} className="grid" style={{ gap: 10 }}>
-        <div>
-          <label>Email</label>
-          <input
-            className="input"
-            type="email"
-            value={form.email}
-            onChange={(e) => setForm({ ...form, email: e.target.value })}
-            required
-          />
-        </div>
-
-        <div>
-          <label>Password</label>
-          <input
-            className="input"
-            type="password"
-            value={form.password}
-            onChange={(e) => setForm({ ...form, password: e.target.value })}
-            required
-          />
-        </div>
-
+    <Card>
+      <PageHeader title="Staff Login" subtitle="No-login mode (header-based role)" />
+      <form onSubmit={onLogin} style={{ display: "grid", gap: 10, maxWidth: 420 }}>
+        <label>Staff Key (optional)</label>
+        <input className="input" value={key} onChange={(e) => setKey(e.target.value)} placeholder="admin123" />
+        <button className="btn btn-primary" type="submit">Enter Staff Mode</button>
         {err && <div style={{ color: "var(--danger)" }}>{err}</div>}
-
-        <button className="btn" type="submit">Login</button>
       </form>
-    </div>
+    </Card>
   );
 }

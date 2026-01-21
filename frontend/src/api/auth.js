@@ -1,15 +1,14 @@
-import { apiPost, apiGet } from "./client";
+import { apiRequest } from "./client";
 
-export function citizenRegister(payload) {
-  // payload: { name, email, password }
-  return apiPost("/auth/register", payload);
-}
-
-export function citizenLogin(payload) {
-  // payload: { email, password }
-  return apiPost("/auth/login", payload);
-}
-
-export function me() {
-  return apiGet("/auth/me");
-}
+export const staffLogin = (email, password) =>
+  apiRequest({
+    url: "/auth/staff/login",
+    method: "POST",
+    data: {
+      email: String(email || "").trim(),
+      password: String(password || "")
+    },
+    headers: {
+      "Content-Type": "application/json"
+    }
+  });

@@ -1,3 +1,5 @@
+# app/core/db.py
+
 from pymongo import MongoClient
 from .app_config import settings
 

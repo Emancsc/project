@@ -3,7 +3,11 @@ import { useParams, Link } from "react-router-dom";
 import Card from "../components/Card";
 import PageHeader from "../components/PageHeader";
 import StatusBadge from "../components/StatusBadge";
-import { staffGetRequestById, staffTransition, staffSetPriority } from "../api/requests";
+import {
+  staffGetRequestById,
+  staffTransition,
+  staffSetPriority,
+} from "../api/requests";
 
 const STATUSES = ["new", "triaged", "assigned", "in_progress", "resolved", "closed"];
 const PRIORITIES = ["P1", "P2", "P3"];
@@ -17,6 +21,7 @@ export default function StaffRequestDetails() {
 
   const [msg, setMsg] = useState("");
   const [err, setErr] = useState("");
+  const [busy, setBusy] = useState(false);
 
   function load() {
     staffGetRequestById(id)
@@ -28,7 +33,7 @@ export default function StaffRequestDetails() {
 
         setPriority(r.priority || "P3");
       })
-      .catch((e) => setReq({ _error: e.message || "Failed to load request." }));
+      .catch((e) => setReq({ _error: e?.message || "Failed to load request." }));
   }
 
   useEffect(() => {
@@ -39,24 +44,32 @@ export default function StaffRequestDetails() {
   async function onTransition() {
     setErr("");
     setMsg("");
+    setBusy(true);
     try {
-      const updated = await staffTransition(id, nextStatus);
+      // ✅ correct payload for TransitionPayload
+      const updated = await staffTransition(id, { next_status: nextStatus });
       setReq(updated);
       setMsg(`Status updated to "${nextStatus}"`);
     } catch (e2) {
-      setErr(e2.message || "Transition failed.");
+      setErr(e2?.message || "Transition failed.");
+    } finally {
+      setBusy(false);
     }
   }
 
   async function onSetPriority() {
     setErr("");
     setMsg("");
+    setBusy(true);
     try {
-      const updated = await staffSetPriority(id, priority);
+      // ✅ correct payload for UpdatePriority
+      const updated = await staffSetPriority(id, { priority });
       setReq(updated);
       setMsg(`Priority updated to "${priority}"`);
     } catch (e2) {
-      setErr(e2.message || "Priority update failed.");
+      setErr(e2?.message || "Priority update failed.");
+    } finally {
+      setBusy(false);
     }
   }
 
@@ -70,7 +83,11 @@ export default function StaffRequestDetails() {
       <PageHeader
         title={`Request: ${req.category}`}
         subtitle="Staff view + status transitions"
-        right={<Link className="btn-ghost" to="/staff/requests">Back</Link>}
+        right={
+          <Link className="btn-ghost" to="/staff/requests">
+            Back
+          </Link>
+        }
       />
 
       <div className="row" style={{ alignItems: "center", marginBottom: 12 }}>
@@ -96,30 +113,44 @@ export default function StaffRequestDetails() {
         {/* Priority controls */}
         <div className="row" style={{ alignItems: "end" }}>
           <div style={{ flex: 1, minWidth: 240 }}>
-            <label>Priority</label>
-            <select className="input" value={priority} onChange={(e) => setPriority(e.target.value)}>
+            <label style={{ fontWeight: 800, fontSize: 13 }}>Priority</label>
+            <select
+              className="input"
+              value={priority}
+              onChange={(e) => setPriority(e.target.value)}
+              disabled={busy}
+            >
               {PRIORITIES.map((p) => (
-                <option key={p} value={p}>{p}</option>
+                <option key={p} value={p}>
+                  {p}
+                </option>
               ))}
             </select>
           </div>
-          <button className="btn-ghost" type="button" onClick={onSetPriority}>
-            Set Priority
+          <button className="btn-ghost" type="button" onClick={onSetPriority} disabled={busy}>
+            {busy ? "Saving..." : "Set Priority"}
           </button>
         </div>
 
         {/* Status transition */}
         <div className="row" style={{ alignItems: "end" }}>
           <div style={{ flex: 1, minWidth: 240 }}>
-            <label>Next Status</label>
-            <select className="input" value={nextStatus} onChange={(e) => setNextStatus(e.target.value)}>
+            <label style={{ fontWeight: 800, fontSize: 13 }}>Next Status</label>
+            <select
+              className="input"
+              value={nextStatus}
+              onChange={(e) => setNextStatus(e.target.value)}
+              disabled={busy}
+            >
               {STATUSES.map((s) => (
-                <option key={s} value={s}>{s}</option>
+                <option key={s} value={s}>
+                  {s}
+                </option>
               ))}
             </select>
           </div>
-          <button className="btn" type="button" onClick={onTransition}>
-            Apply Transition
+          <button className="btn btn-primary" type="button" onClick={onTransition} disabled={busy}>
+            {busy ? "Applying..." : "Apply Transition"}
           </button>
         </div>
 

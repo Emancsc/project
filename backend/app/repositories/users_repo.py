@@ -19,5 +19,18 @@ class UsersRepository:
         user["_id"] = str(user["_id"])
         return user
 
+    # ✅ NEW
+    def create_staff(self, name: str, email: str, password: str):
+        user = {
+            "name": name,
+            "email": email,
+            "password_hash": hash_password(password),
+            "role": "staff",
+            "created_at": datetime.utcnow()
+        }
+        self.collection.insert_one(user)
+        user["_id"] = str(user["_id"])
+        return user
+
     def find_by_email(self, email: str):
         return self.collection.find_one({"email": email})

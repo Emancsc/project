@@ -7,7 +7,7 @@ router = APIRouter(prefix="/requests", tags=["Assignment"])
 
 
 def get_repo():
-    return RequestsAssignmentRepository(db.service_requests, db.service_agents)
+    return RequestsAssignmentRepository(db.service_requests, db.service_agents, db.performance_logs)
 
 
 @router.post("/{request_id}/auto-assign")

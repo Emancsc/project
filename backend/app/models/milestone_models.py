@@ -1,8 +1,17 @@
 from pydantic import BaseModel, Field
-from typing import Optional, List
+from typing import Optional, List, Literal
+
+
+MilestoneType = Literal[
+    "arrived",
+    "started",
+    "update",
+    "complete",
+    "completed"
+]
 
 
 class MilestonePayload(BaseModel):
-    milestone: str = Field(..., examples=["arrived"])
+    milestone: MilestoneType = Field(..., examples=["arrived"])
     note: Optional[str] = None
-    evidence_urls: List[str] = []
+    evidence_urls: List[str] = Field(default_factory=list)

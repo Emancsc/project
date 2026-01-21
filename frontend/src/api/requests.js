@@ -1,58 +1,141 @@
-import { apiGet, apiPost, apiPatch } from "./client";
+import { apiRequest } from "./client";
 
-// Staff
-export function staffListRequests(params = "") {
-  return apiGet(`/requests/${params}`);
-}
-export function staffGetRequestById(id) {
-  return apiGet(`/requests/${id}`);
-}
-export function staffTransition(id, next_status) {
-  // backend expects body: { next_status: <enum string> }
-  return apiPatch(`/requests/${id}/transition`, { next_status });
-}
-export function staffSetPriority(id, priority) {
-  return apiPatch(`/requests/${id}/priority`, { priority });
-}
-export function staffAutoAssign(id) {
-  return apiPost(`/requests/${id}/auto-assign`, {});
-}
-export function staffAssignToAgent(id, agentId) {
-  return apiPost(`/requests/${id}/assign/${agentId}`, {});
-}
+// ---------- Citizen ----------
+export const createRequest = (data, idempotencyKey) =>
+  apiRequest({
+    url: "/requests",
+    method: "POST",
+    data,
+    headers: {
+      "Idempotency-Key": idempotencyKey,
+    },
+  });
+
+export const getMyRequests = () =>
+  apiRequest({
+    url: "/requests/me",
+    method: "GET",
+  });
+
+export const getRequestById = (id) =>
+  apiRequest({
+    url: `/requests/${id}`,
+    method: "GET",
+  });
+
+export const getTimeline = (id) =>
+  apiRequest({
+    url: `/requests/${id}/timeline`,
+    method: "GET",
+  });
+
+export const addComment = (id, payload) =>
+  apiRequest({
+    url: `/requests/${id}/comment`,
+    method: "POST",
+    data: payload,
+  });
+
+export const addRating = (id, payload) =>
+  apiRequest({
+    url: `/requests/${id}/rating`,
+    method: "POST",
+    data: payload,
+  });
+
+// ---------- Staff ----------
+const staffHeaders = { "X-Role": "staff" };
+
+export const listRequests = (params) =>
+  apiRequest({
+    url: "/requests",
+    method: "GET",
+    params,
+    headers: staffHeaders,
+  });
+
+export const transitionRequest = (id, payload) =>
+  apiRequest({
+    url: `/requests/${id}/transition`,
+    method: "PATCH",
+    data: payload,
+    headers: staffHeaders,
+  });
+
+export const updatePriority = (id, payload) =>
+  apiRequest({
+    url: `/requests/${id}/priority`,
+    method: "PATCH",
+    data: payload,
+    headers: staffHeaders,
+  });
+
+export const autoAssign = (id) =>
+  apiRequest({
+    url: `/requests/${id}/auto-assign`,
+    method: "POST",
+    headers: staffHeaders,
+  });
+
+export const assignAgent = (id, agentId) =>
+  apiRequest({
+    url: `/requests/${id}/assign/${agentId}`,
+    method: "POST",
+    headers: staffHeaders,
+  });
+
+export const mergeRequest = (id, masterId) =>
+  apiRequest({
+    url: `/requests/${id}/merge`,
+    method: "POST",
+    data: { master_request_id: masterId },
+    headers: staffHeaders,
+  });
+
+export const escalateRequest = (id) =>
+  apiRequest({
+    url: `/requests/${id}/escalate`,
+    method: "POST",
+    headers: staffHeaders,
+  });
+
+// ----------------------------
+// Backward-compatible aliases
+// ----------------------------
 
 // Citizen
-export function citizenCreateRequest(body) {
-  return apiPost(`/requests/`, body);
-}
-export function citizenMyRequests() {
-  return apiGet(`/requests/me`);
-}
-export function citizenGetRequestById(id) {
-  return apiGet(`/requests/${id}`);
-}
-export function citizenAddComment(id, body) {
-  return apiPost(`/requests/${id}/comment`, body);
-}
-export function citizenRate(id, body) {
-  return apiPost(`/requests/${id}/rating`, body);
-}
+export const citizenCreateRequest = (data, idempotencyKey) =>
+  createRequest(data, idempotencyKey);
 
-// Map/shared
-export function nearbyRequests(lng, lat, radius_m = 1000) {
-  return apiGet(`/requests/nearby?lng=${lng}&lat=${lat}&radius_m=${radius_m}`);
-}
+export const citizenMyRequests = () => getMyRequests();
 
-// Analytics
-export function analyticsKPIs() {
-  return apiGet(`/analytics/kpis`);
-}
-export function analyticsHeatmap() {
-  return apiGet(`/analytics/geofeeds/heatmap`);
-}
-export function analyticsCohorts() {
-  return apiGet(`/analytics/cohorts`);
-}
-export function analyticsAgents() {
-  return apiGet(`/analytics/agents`);
-}
+export const citizenGetRequestById = (id) => getRequestById(id);
+
+export const citizenGetTimeline = (id) => getTimeline(id);
+
+export const citizenAddComment = (id, payload) => addComment(id, payload);
+
+export const citizenAddRating = (id, payload) => addRating(id, payload);
+
+// Staff
+export const staffListRequests = (params) => listRequests(params);
+
+export const staffGetRequestById = (id) => getRequestById(id);
+
+export const staffTransition = (id, payload) =>
+  transitionRequest(id, payload);
+
+export const staffSetPriority = (id, payload) =>
+  updatePriority(id, payload);
+
+export const staffAutoAssign = (id) => autoAssign(id);
+
+export const staffAssignAgent = (id, agentId) =>
+  assignAgent(id, agentId);
+
+export const staffMerge = (id, masterId) =>
+  mergeRequest(id, masterId);
+
+export const staffEscalate = (id) => escalateRequest(id);
+
+export const staffGetTimeline = (id) => getTimeline(id);

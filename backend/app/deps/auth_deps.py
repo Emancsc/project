@@ -1,32 +1,22 @@
-from fastapi import Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer
-from bson import ObjectId
-from app.core.security import decode_token
-from app.core.db import db
+# app/deps/auth_deps.py
+from fastapi import Depends, HTTPException, Header
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
+ALLOWED_ROLES = {"citizen", "staff", "agent"}
 
-def get_current_user(token: str = Depends(oauth2_scheme)):
-    payload = decode_token(token)
-    if not payload:
-        raise HTTPException(status_code=401, detail="Invalid token")
+def get_current_user(
+    x_role: str = Header(default="citizen", alias="X-Role"),
+    x_citizen_id: str | None = Header(default=None, alias="X-Citizen-Id"),
+):
+    role = (x_role or "citizen").lower()
 
-    sub = payload.get("sub")
-    if not sub:
-        raise HTTPException(status_code=401, detail="Invalid token payload")
+    if role not in ALLOWED_ROLES:
+        raise HTTPException(status_code=400, detail="Invalid role")
 
-    user = None
-    if ObjectId.is_valid(sub):
-        user = db.users.find_one({"_id": ObjectId(sub)})
-    else:
-        user = db.users.find_one({"email": sub})
-
-    if not user:
-        raise HTTPException(status_code=401, detail="User not found")
-
-    user["_id"] = str(user["_id"])
-    return user
-
+    return {
+        "_id": x_citizen_id or "public-citizen",
+        "role": role,
+        "name": "Public Citizen" if role == "citizen" else role.title(),
+    }
 
 def require_role(role: str):
     def checker(user=Depends(get_current_user)):
