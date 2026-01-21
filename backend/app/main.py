@@ -5,9 +5,17 @@ from app.core.app_config import settings
 from app.api.routers import requests, citizens, agents, analytics
 from app.services.indexes import ensure_indexes
 from app.api.routers import auth
-
+from app.api.routers import agents, analytics, interactions, milestones, assignment
 
 app = FastAPI(title=settings.PROJECT_NAME)
+
+app.include_router(analytics.router)
+app.include_router(interactions.router)
+app.include_router(milestones.router)
+app.include_router(assignment.router)
+
+
+
 ensure_indexes()
 app.include_router(auth.router)
 

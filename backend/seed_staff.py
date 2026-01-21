@@ -11,7 +11,7 @@ if not db.users.find_one({"email": email}):
         "email": email,
         "password_hash": hash_password(password),
         "role": "staff",
-"created_at": datetime.now(timezone.utc)
+        "created_at": datetime.now(timezone.utc)
     })
     print("Staff user created")
 else:

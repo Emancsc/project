@@ -1,8 +1,7 @@
-from enum import Enum
 from pydantic import BaseModel
+from enum import Enum
 
-
-class RequestStatus(str, Enum):
+class WorkflowStatus(str, Enum):
     new = "new"
     triaged = "triaged"
     assigned = "assigned"
@@ -10,6 +9,5 @@ class RequestStatus(str, Enum):
     resolved = "resolved"
     closed = "closed"
 
-
 class TransitionPayload(BaseModel):
-    next_status: RequestStatus
+    next_status: WorkflowStatus

@@ -1,54 +1,58 @@
 import { apiGet, apiPost, apiPatch } from "./client";
 
-// Citizen
-export function citizenCreateRequest(payload) {
-  return apiPost("/requests", payload);
-}
-
-export function citizenMyRequests() {
-  return apiGet("/requests/me");
-}
-
-export function citizenGetRequestById(id) {
-  return apiGet(`/requests/${id}`);
-}
-
 // Staff
-export function staffListRequests({ page = 1, page_size = 10, status = "", category = "", priority = "" } = {}) {
-  const qs = new URLSearchParams({
-    page: String(page),
-    page_size: String(page_size),
-    status,
-    category,
-    priority,
-  }).toString();
-
-  return apiGet(`/requests?${qs}`);
+export function staffListRequests(params = "") {
+  return apiGet(`/requests/${params}`);
 }
-
 export function staffGetRequestById(id) {
   return apiGet(`/requests/${id}`);
 }
-
-// ✅ FIX: send body { next_status: "assigned" }
-export function staffTransition(requestId, nextStatus) {
-  return apiPatch(`/requests/${requestId}/transition`, {
-    next_status: nextStatus,
-  });
+export function staffTransition(id, next_status) {
+  // backend expects body: { next_status: <enum string> }
+  return apiPatch(`/requests/${id}/transition`, { next_status });
+}
+export function staffSetPriority(id, priority) {
+  return apiPatch(`/requests/${id}/priority`, { priority });
+}
+export function staffAutoAssign(id) {
+  return apiPost(`/requests/${id}/auto-assign`, {});
+}
+export function staffAssignToAgent(id, agentId) {
+  return apiPost(`/requests/${id}/assign/${agentId}`, {});
 }
 
-export function staffSetPriority(requestId, priority) {
-  return apiPatch(`/requests/${requestId}/priority`, {
-    priority,
-  });
+// Citizen
+export function citizenCreateRequest(body) {
+  return apiPost(`/requests/`, body);
+}
+export function citizenMyRequests() {
+  return apiGet(`/requests/me`);
+}
+export function citizenGetRequestById(id) {
+  return apiGet(`/requests/${id}`);
+}
+export function citizenAddComment(id, body) {
+  return apiPost(`/requests/${id}/comment`, body);
+}
+export function citizenRate(id, body) {
+  return apiPost(`/requests/${id}/rating`, body);
 }
 
+// Map/shared
 export function nearbyRequests(lng, lat, radius_m = 1000) {
-  const qs = new URLSearchParams({
-    lng: String(lng),
-    lat: String(lat),
-    radius_m: String(radius_m),
-  }).toString();
+  return apiGet(`/requests/nearby?lng=${lng}&lat=${lat}&radius_m=${radius_m}`);
+}
 
-  return apiGet(`/requests/nearby?${qs}`);
+// Analytics
+export function analyticsKPIs() {
+  return apiGet(`/analytics/kpis`);
+}
+export function analyticsHeatmap() {
+  return apiGet(`/analytics/geofeeds/heatmap`);
+}
+export function analyticsCohorts() {
+  return apiGet(`/analytics/cohorts`);
+}
+export function analyticsAgents() {
+  return apiGet(`/analytics/agents`);
 }
